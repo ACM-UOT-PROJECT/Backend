@@ -1,5 +1,5 @@
 jet:
-    jet -source=postgres -dsn="$GOOSE_DBSTRING" -path=./database/gen/
+    jet -source="${DB}" -dsn="$GOOSE_DBSTRING" -path=./database/gen/
 
 build:
     go build -o ./tmp/main .

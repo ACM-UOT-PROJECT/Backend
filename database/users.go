@@ -1,25 +1,19 @@
 package database
 
 import (
-	"github.com/CollCaz/UniSite/database/gen/unicontentdb/public/model"
-	t "github.com/CollCaz/UniSite/database/gen/unicontentdb/public/table"
-	s "github.com/go-jet/jet/v2/postgres"
+	"backend/database/gen/model"
+	t "backend/database/gen/table"
+
+	s "github.com/go-jet/jet/v2/sqlite"
 )
 
 type User struct {
 	Id       int32
 	Username string
-	Email    string
-	Roles    []string
-}
-
-type joinedApiUserModel struct {
-	model.APIUser
-	Roles []model.Role
 }
 
 func (d *DataService) scanUser(stmt s.Statement) (User, error) {
-	dest := joinedApiUserModel{}
+	dest := model.User{}
 
 	err := stmt.Query(d.db, &dest)
 	if err != nil {
@@ -28,70 +22,51 @@ func (d *DataService) scanUser(stmt s.Statement) (User, error) {
 		return User{}, err
 	}
 
-	roles := []string{}
-	for _, role := range dest.Roles {
-		roles = append(roles, role.Name)
-	}
-
 	res := User{
-		Id:       dest.ID,
+		Id:       *dest.ID,
 		Username: dest.UserName,
-		Email:    dest.Email,
-		Roles:    roles,
 	}
 
 	return res, nil
 }
 
 type RegisterUserArgs struct {
-	Username        string
-	Email           string
-	Password        string
-	PasswordConfirm string
+	Username string
+	Token    string `validate:"jwt"`
 }
 
 func (d *DataService) RegisterUser(args RegisterUserArgs) (User, error) {
-	stmt := t.APIUser.
+	stmt := t.User.
 		INSERT(
-			t.APIUser.UserName,
-			t.APIUser.Email,
-			t.APIUser.PassHash,
+			t.User.UserName,
+			t.User.IPAddress,
 		).
 		VALUES(
 			args.Username,
-			args.Email,
-			args.Password,
+			args.Token,
 		).
 		RETURNING(
-			t.APIUser.ID,
+			t.User.ID,
 		)
 
 	return d.scanUser(stmt)
 }
 
 type LoginUserArgs struct {
-	Email    string
-	Password string
+	IpAddress string `validate:"ip"`
 }
 
 func (d *DataService) LoginUser(args LoginUserArgs) (User, error) {
 	stmt := s.
 		SELECT(
-			t.APIUser.ID,
-			t.APIUser.UserName,
-			t.APIUser.Email,
-			t.Role.Name,
+			t.User.ID,
+			t.User.UserName,
 		).
 		FROM(
-			t.APIUser.INNER_JOIN(t.UserRoles, t.UserRoles.UserID.EQ(t.APIUser.ID)).
-				INNER_JOIN(t.Role, t.UserRoles.RoleID.EQ(t.Role.ID)),
+			t.User,
 		).
 		WHERE(
-			s.AND(
-				t.APIUser.Email.EQ(s.String(args.Email)),
-				t.APIUser.PassHash.EQ(s.String(args.Password)),
-			),
+			t.User.IPAddress.EQ(s.String(args.IpAddress)),
 		)
-
 	return d.scanUser(stmt)
 }

@@ -28,21 +28,12 @@ func ProtectMutation(roles ...string) func(next http.Handler) http.Handler {
 
 func (s *Server) RegisterRoutes() {
 	s.registerAuthSubrouteOn(s.server)
-	apiRoute := fuego.Group(s.server, "/api-v1")
-	fuego.Use(apiRoute, ProtectMutation("admin"))
+	apiRoute := fuego.Group(s.server, "/api")
+	fuego.Get(apiRoute, "/", s.helloWorld)
+	// fuego.Use(apiRoute, ProtectMutation(""))
 	{
-		fuego.Get(apiRoute, "/", s.helloWorld)
-		// About Section
-		s.registerAboutSubrouteOn(apiRoute)
-		// Main Hero Images
-		s.registerHeroImagesSubrouteOn(apiRoute)
-		// Departments
-		s.registerDepartmentsSubrouteOn(apiRoute)
-		// Events
-		s.registerEventsSubrouteOn(apiRoute)
-		// Faculties
-		s.registerFacultiesSubrouteOn(apiRoute)
-		// User
+		s.registerAuthSubrouteOn(apiRoute)
+		s.registerJudgeSubrouteOn(apiRoute)
 	}
 }
 

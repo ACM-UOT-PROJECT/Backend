@@ -2,10 +2,13 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log/slog"
 	"os"
 
-	"github.com/CollCaz/UniSite/server"
+	"backend/judge"
+	"backend/server"
+
 	"github.com/charmbracelet/log"
 	"github.com/joho/godotenv"
 
@@ -20,12 +23,28 @@ func main() {
 	handler := log.New(os.Stderr)
 	logger := slog.New(handler)
 
+	j := judge.CreateJudge(*logger)
 	s := server.InitServer(server.NewServerArgs{
 		Logger: logger,
 		Db:     db,
+		Judge:  j,
 	})
 
+	// Code with a syntax error in Go (e.g., missing closing parenthesis)
+	code := "console.log('Hello World')"
+
+	input := "" // empty input
+	response, err := j.PistonRunner("js", code, input)
+	if err != nil {
+		// If there is a compilation error, it will be reported here
+		fmt.Println("Error:", err)
+		return
+	}
+
+	// If no error, output results
+	fmt.Printf("Output:\n%s\n", response.Run.Stdout)
 	s.Run()
+
 }
 
 func openDb() *sql.DB {

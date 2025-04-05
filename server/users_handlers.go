@@ -3,55 +3,67 @@ package server
 import (
 	"time"
 
-	d "github.com/CollCaz/UniSite/database"
+	d "backend/database"
 	"github.com/go-fuego/fuego"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 func (s *Server) registerAuthSubrouteOn(parentRoute *fuego.Server) *fuego.Server {
-	security := fuego.NewSecurity()
-	security.ExpiresInterval = 24 * time.Hour
 	userRoute := fuego.Group(parentRoute, "/auth")
-	fuego.Post(userRoute, "/login", security.LoginHandler(s.LoginUser))
-	fuego.Post(userRoute, "", s.PostUser)
+	{
+		fuego.Get(userRoute, "/issueToken", s.IssueToken)
+		fuego.Post(userRoute, "", s.PostUser)
+	}
 
 	return userRoute
 }
 
 type UserToken struct {
 	jwt.RegisteredClaims
-	Username string   `json:"username"`
-	Roles    []string `json:"roles"`
+	Username string `json:"username"`
 }
 
-func (s *Server) LoginUser(username, password string) (jwt.Claims, error) {
-	user, err := s.db.LoginUser(d.LoginUserArgs{
-		Email:    username,
-		Password: password,
+func (s *Server) IssueToken(ctx fuego.ContextNoBody) (string, error) {
+	s.logger.Info("starting...")
+	// Check for the token in cookies
+	cookieToken, err := ctx.Cookie("jwt_token")
+	if err == nil {
+		if cookieToken != nil {
+			_, err := s.server.Security.ValidateToken(cookieToken.Value)
+			if err == nil {
+				return "already have token", nil
+			}
+		}
+	}
+	s.logger.Info("no cookie")
+
+	// Create JWT claims with no expiration (effectively never expires)
+	claims := UserToken{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    "Backend",                          // Issuer of the token
+			Subject:   "anon",                             // Subject (can be a user ID or email)
+			ExpiresAt: nil,                                // Never expire
+			NotBefore: &jwt.NumericDate{},                 // Token valid immediately
+			IssuedAt:  &jwt.NumericDate{Time: time.Now()}, // Token issued now
+		},
+	}
+
+	// Generate token and store in cookie
+	token, err := s.server.Security.GenerateTokenToCookies(claims, ctx.Response())
+	if err != nil {
+		return "already have token", err
+	}
+
+	// Optionally, store token in DB or log it
+	_, err = s.db.RegisterUser(d.RegisterUserArgs{
+		Username: "",
+		Token:    token,
 	})
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	token := UserToken{
-		RegisteredClaims: jwt.RegisteredClaims{
-			//FIXME: the fields
-			Issuer:   "CONENT_API_CHANGE_LATER",
-			Subject:  user.Username,
-			Audience: jwt.ClaimStrings{},
-			ExpiresAt: &jwt.NumericDate{
-				Time: time.Now().Add(24 * time.Hour),
-			},
-			NotBefore: &jwt.NumericDate{},
-			IssuedAt: &jwt.NumericDate{
-				Time: time.Now(),
-			},
-			ID: "",
-		},
-		Username: user.Username,
-		Roles:    user.Roles,
-	}
-
+	// Return the token
 	return token, nil
 }
 

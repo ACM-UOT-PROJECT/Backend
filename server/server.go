@@ -4,7 +4,9 @@ import (
 	"database/sql"
 	"log/slog"
 
-	d "github.com/CollCaz/UniSite/database"
+	d "backend/database"
+	"backend/judge"
+
 	"github.com/go-fuego/fuego"
 )
 
@@ -12,11 +14,13 @@ type Server struct {
 	server *fuego.Server
 	logger *slog.Logger
 	db     *d.DataService
+	Judge  *judge.Judge
 }
 
 type NewServerArgs struct {
 	Logger *slog.Logger
 	Db     *sql.DB
+	Judge  *judge.Judge
 }
 
 func (s *Server) Run() {
@@ -36,6 +40,10 @@ func InitServer(args NewServerArgs) Server {
 		args.Logger.Error("No db connection given")
 		panic("must provide db connection")
 	}
+	if args.Judge == nil {
+		args.Logger.Error("No judge given")
+		panic("must give judge")
+	}
 
 	server := fuego.NewServer(
 		fuego.WithLogHandler(args.Logger.Handler()),
@@ -50,5 +58,6 @@ func InitServer(args NewServerArgs) Server {
 		logger: args.Logger,
 		server: server,
 		db:     db,
+		Judge:  args.Judge,
 	}
 }
