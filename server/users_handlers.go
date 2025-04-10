@@ -56,7 +56,7 @@ func (s *Server) IssueToken(ctx fuego.ContextNoBody) (string, error) {
 
 	// Optionally, store token in DB or log it
 	_, err = s.db.RegisterUser(d.RegisterUserArgs{
-		Username: "",
+		UserName: "",
 		Token:    token,
 	})
 	if err != nil {
@@ -67,12 +67,25 @@ func (s *Server) IssueToken(ctx fuego.ContextNoBody) (string, error) {
 	return token, nil
 }
 
-func (s *Server) PostUser(c fuego.ContextWithBody[d.RegisterUserArgs]) (d.User, error) {
+type PostUserBody struct {
+	UserName string
+}
+
+func (s *Server) PostUser(c fuego.ContextWithBody[PostUserBody]) (d.User, error) {
 	body, err := c.Body()
 	if err != nil {
 		s.logger.Error(err.Error())
 		return d.User{}, err
 	}
+	cookie, err := c.Cookie("jwt_token")
+	if err != nil {
+		return d.User{}, err
+	}
 
-	return s.db.RegisterUser(body)
+	args := d.RegisterUserArgs{
+		UserName: body.UserName,
+		Token:    cookie.Value,
+	}
+
+	return s.db.RegisterUser(args)
 }

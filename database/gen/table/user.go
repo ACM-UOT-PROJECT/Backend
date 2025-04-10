@@ -19,7 +19,7 @@ type userTable struct {
 	// Columns
 	ID        sqlite.ColumnInteger
 	UserName  sqlite.ColumnString
-	IPAddress sqlite.ColumnString
+	Token     sqlite.ColumnString
 	CreatedAt sqlite.ColumnTimestamp
 
 	AllColumns     sqlite.ColumnList
@@ -64,10 +64,10 @@ func newUserTableImpl(schemaName, tableName, alias string) userTable {
 	var (
 		IDColumn        = sqlite.IntegerColumn("id")
 		UserNameColumn  = sqlite.StringColumn("user_name")
-		IPAddressColumn = sqlite.StringColumn("ip_address")
+		TokenColumn     = sqlite.StringColumn("token")
 		CreatedAtColumn = sqlite.TimestampColumn("created_at")
-		allColumns      = sqlite.ColumnList{IDColumn, UserNameColumn, IPAddressColumn, CreatedAtColumn}
-		mutableColumns  = sqlite.ColumnList{UserNameColumn, IPAddressColumn, CreatedAtColumn}
+		allColumns      = sqlite.ColumnList{IDColumn, UserNameColumn, TokenColumn, CreatedAtColumn}
+		mutableColumns  = sqlite.ColumnList{UserNameColumn, TokenColumn, CreatedAtColumn}
 		defaultColumns  = sqlite.ColumnList{CreatedAtColumn}
 	)
 
@@ -77,7 +77,7 @@ func newUserTableImpl(schemaName, tableName, alias string) userTable {
 		//Columns
 		ID:        IDColumn,
 		UserName:  UserNameColumn,
-		IPAddress: IPAddressColumn,
+		Token:     TokenColumn,
 		CreatedAt: CreatedAtColumn,
 
 		AllColumns:     allColumns,

@@ -14,6 +14,6 @@ import (
 type User struct {
 	ID        *int32 `sql:"primary_key"`
 	UserName  string
-	IPAddress string
+	Token     string
 	CreatedAt *time.Time
 }

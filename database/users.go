@@ -10,6 +10,7 @@ import (
 type User struct {
 	Id       int32
 	Username string
+	Token    string
 }
 
 func (d *DataService) scanUser(stmt s.Statement) (User, error) {
@@ -25,13 +26,14 @@ func (d *DataService) scanUser(stmt s.Statement) (User, error) {
 	res := User{
 		Id:       *dest.ID,
 		Username: dest.UserName,
+		Token:    dest.Token,
 	}
 
 	return res, nil
 }
 
 type RegisterUserArgs struct {
-	Username string
+	UserName string
 	Token    string `validate:"jwt"`
 }
 
@@ -39,21 +41,30 @@ func (d *DataService) RegisterUser(args RegisterUserArgs) (User, error) {
 	stmt := t.User.
 		INSERT(
 			t.User.UserName,
-			t.User.IPAddress,
+			t.User.Token,
 		).
 		VALUES(
-			args.Username,
+			args.UserName,
 			args.Token,
 		).
 		RETURNING(
 			t.User.ID,
+		).
+		ON_CONFLICT(
+			t.User.Token,
+		).
+		DO_UPDATE(
+			s.SET(t.User.ID.SET(t.User.ID)),
+		).
+		RETURNING(
+			t.User.AllColumns,
 		)
 
 	return d.scanUser(stmt)
 }
 
 type LoginUserArgs struct {
-	IpAddress string `validate:"ip"`
+	Token string
 }
 
 func (d *DataService) LoginUser(args LoginUserArgs) (User, error) {
@@ -66,7 +77,7 @@ func (d *DataService) LoginUser(args LoginUserArgs) (User, error) {
 			t.User,
 		).
 		WHERE(
-			t.User.IPAddress.EQ(s.String(args.IpAddress)),
+			t.User.Token.EQ(s.String(args.Token)),
 		)
 	return d.scanUser(stmt)
 }

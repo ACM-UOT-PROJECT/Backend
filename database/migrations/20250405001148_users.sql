@@ -4,7 +4,7 @@ SELECT 'up SQL query';
 create table if not exists user (
 	id integer primary key,
 	user_name text not null,
-	token text not null,
+	token text unique not null,
 	created_at datetime default CURRENT_TIMESTAMP
 );
 -- +goose StatementEnd
