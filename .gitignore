@@ -3,3 +3,4 @@ direnv/
 .direnv
 doc
 tmp
+db.sqlite
