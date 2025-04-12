@@ -31,6 +31,7 @@ func (s *Server) IssueToken(ctx fuego.ContextNoBody) (string, error) {
 		if cookieToken != nil {
 			_, err := s.server.Security.ValidateToken(cookieToken.Value)
 			if err == nil {
+				s.logger.Info("User already has a token")
 				return "already have token", nil
 			}
 		}
@@ -51,10 +52,11 @@ func (s *Server) IssueToken(ctx fuego.ContextNoBody) (string, error) {
 	// Generate token and store in cookie
 	token, err := s.server.Security.GenerateTokenToCookies(claims, ctx.Response())
 	if err != nil {
-		return "already have token", err
+		return "could not generate token", err
 	}
 
-	// Optionally, store token in DB or log it
+	s.db.IncrementPeople()
+
 	_, err = s.db.RegisterUser(d.RegisterUserArgs{
 		UserName: "",
 		Token:    token,
@@ -85,6 +87,13 @@ func (s *Server) PostUser(c fuego.ContextWithBody[PostUserBody]) (d.User, error)
 	args := d.RegisterUserArgs{
 		UserName: body.UserName,
 		Token:    cookie.Value,
+	}
+
+	_, err = s.db.SetWinner(d.SetWinnerArgs{
+		Winner: body.UserName,
+	})
+	if err != nil {
+		return d.User{}, err
 	}
 
 	return s.db.RegisterUser(args)

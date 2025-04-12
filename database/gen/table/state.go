@@ -67,7 +67,7 @@ func newStateTableImpl(schemaName, tableName, alias string) stateTable {
 		TriesColumn    = sqlite.IntegerColumn("tries")
 		PeopleColumn   = sqlite.IntegerColumn("people")
 		allColumns     = sqlite.ColumnList{IDColumn, WinnerColumn, TriesColumn, PeopleColumn}
-		mutableColumns = sqlite.ColumnList{IDColumn, WinnerColumn, TriesColumn, PeopleColumn}
+		mutableColumns = sqlite.ColumnList{WinnerColumn, TriesColumn, PeopleColumn}
 		defaultColumns = sqlite.ColumnList{}
 	)
 

@@ -54,7 +54,10 @@ func (d *DataService) RegisterUser(args RegisterUserArgs) (User, error) {
 			t.User.Token,
 		).
 		DO_UPDATE(
-			s.SET(t.User.ID.SET(t.User.ID)),
+			s.SET(
+				t.User.ID.SET(t.User.ID),
+				t.User.UserName.SET(s.String(args.UserName)),
+			),
 		).
 		RETURNING(
 			t.User.AllColumns,

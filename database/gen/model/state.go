@@ -8,7 +8,7 @@
 package model
 
 type State struct {
-	ID     *int32
+	ID     *int32 `sql:"primary_key"`
 	Winner *string
 	Tries  *int32
 	People *int32

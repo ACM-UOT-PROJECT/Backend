@@ -14,6 +14,12 @@ type PostCodeBody struct {
 
 // PostCode handles the POST request to submit code, runs the code using Piston, and checks results using CheckAll
 func (s *Server) PostCode(c fuego.ContextWithBody[PostCodeBody]) (judge.Result, error) {
+
+	_, err := s.db.IncrementTries()
+	if err != nil {
+		return judge.Result{}, err
+	}
+
 	// Extract the code and language from the request body
 	body, err := c.Body()
 	if err != nil {
@@ -27,6 +33,16 @@ func (s *Server) PostCode(c fuego.ContextWithBody[PostCodeBody]) (judge.Result, 
 	if err != nil {
 		// Log and return an error if there was an issue with CheckAll
 		s.logger.Error("Error checking all test cases", "error", err)
+		return result, err
+	}
+
+	state, err := s.db.GetState()
+	if err != nil {
+		return judge.Result{}, err
+	}
+
+	if state.Winner != "" {
+		result.Verdict = "TL"
 		return result, err
 	}
 

@@ -8,6 +8,7 @@ import (
 	"backend/judge"
 
 	"github.com/go-fuego/fuego"
+	"github.com/rs/cors"
 )
 
 type Server struct {
@@ -46,7 +47,12 @@ func InitServer(args NewServerArgs) Server {
 	}
 
 	server := fuego.NewServer(
-		fuego.WithLogHandler(args.Logger.Handler()),
+		fuego.WithGlobalMiddlewares(cors.New(cors.Options{
+			AllowedOrigins:   []string{"http://localhost:5173"},
+			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowedHeaders:   []string{"*"},
+			AllowCredentials: true,
+		}).Handler),
 	)
 
 	db := d.NewDataService(d.NewDataServiceArgs{
