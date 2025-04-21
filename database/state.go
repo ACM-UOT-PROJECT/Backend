@@ -34,10 +34,10 @@ func (d *DataService) scanState(stmt s.Statement) (State, error) {
 
 func (d *DataService) GetState() (State, error) {
 	stmt := s.SELECT(
-		t.State.AllColumns.Except(t.State.ID),
+		t.State.AllColumns,
 	).FROM(
 		t.State,
-	)
+	).LIMIT(1)
 
 	return d.scanState(stmt)
 }
@@ -75,7 +75,7 @@ func (d *DataService) SetWinner(args SetWinnerArgs) (State, error) {
 		args.Winner,
 	).WHERE(
 		t.State.ID.EQ(s.Int(1)),
-	)
+	).RETURNING(t.State.AllColumns)
 
 	return d.scanState(stmt)
 }
@@ -91,7 +91,7 @@ func (d *DataService) SetTries(args SetTriesArgs) (State, error) {
 		args.Tries,
 	).WHERE(
 		t.State.ID.EQ(s.Int(1)),
-	)
+	).RETURNING(t.State.AllColumns)
 
 	return d.scanState(stmt)
 }
@@ -107,7 +107,7 @@ func (d *DataService) SetPeople(args SetPeopleArgs) (State, error) {
 		args.People,
 	).WHERE(
 		t.State.ID.EQ(s.Int(1)),
-	)
+	).RETURNING(t.State.AllColumns)
 
 	return d.scanState(stmt)
 }
@@ -119,6 +119,8 @@ func (d *DataService) IncrementTries() (State, error) {
 		t.State.Tries.ADD(s.Int(1)),
 	).WHERE(
 		t.State.ID.EQ(s.Int(1)),
+	).RETURNING(
+		t.State.AllColumns,
 	)
 
 	return d.scanState(stmt)
@@ -131,7 +133,7 @@ func (d *DataService) IncrementPeople() (State, error) {
 		t.State.People.ADD(s.Int(1)),
 	).WHERE(
 		t.State.ID.EQ(s.Int(1)),
-	)
+	).RETURNING(t.State.AllColumns)
 
 	return d.scanState(stmt)
 }
