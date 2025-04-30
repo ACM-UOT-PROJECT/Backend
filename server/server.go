@@ -3,6 +3,7 @@ package server
 import (
 	"database/sql"
 	"log/slog"
+	"os"
 
 	d "backend/database"
 	"backend/judge"
@@ -29,7 +30,8 @@ func (s *Server) Run() {
 	s.logger.Info("Registering routes...")
 	s.RegisterRoutes()
 	s.logger.Info("Running server...")
-	s.server.Addr = "0.0.0.0:9999"
+	port := os.Getenv("GO_PORT")
+	s.server.Addr = port
 	err := s.server.Run()
 	s.logger.Error(err.Error())
 }
