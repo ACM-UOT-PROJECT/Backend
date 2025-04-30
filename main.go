@@ -44,19 +44,18 @@ func main() {
 	// If no error, output results
 	fmt.Printf("Output:\n%s\n", response.Run.Stdout)
 	s.Run()
-
 }
 
 func openDb() *sql.DB {
 	dbString := os.Getenv("GOOSE_DBSTRING")
 	db, err := sql.Open("sqlite3", dbString)
 	if err != nil {
-		panic("Could not open db")
+		panic(fmt.Sprint("Could not open db", err.Error()))
 	}
 
 	err = db.Ping()
 	if err != nil {
-		panic("Could not ping db")
+		panic(fmt.Sprint("Could not ping db", err.Error()))
 	}
 
 	return db

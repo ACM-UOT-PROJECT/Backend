@@ -34,6 +34,7 @@ func (s *Server) RegisterRoutes() {
 	{
 		s.registerAuthSubrouteOn(apiRoute)
 		s.registerJudgeSubrouteOn(apiRoute)
+		s.registerStateSubrouteOn(apiRoute)
 	}
 }
 

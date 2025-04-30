@@ -116,7 +116,7 @@ func (d *DataService) IncrementTries() (State, error) {
 	stmt := t.State.UPDATE(
 		t.State.Tries,
 	).SET(
-		t.State.Tries.ADD(s.Int(1)),
+		1,
 	).WHERE(
 		t.State.ID.EQ(s.Int(1)),
 	).RETURNING(

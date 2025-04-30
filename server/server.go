@@ -29,6 +29,7 @@ func (s *Server) Run() {
 	s.logger.Info("Registering routes...")
 	s.RegisterRoutes()
 	s.logger.Info("Running server...")
+	s.server.Addr = "0.0.0.0:9999"
 	err := s.server.Run()
 	s.logger.Error(err.Error())
 }
