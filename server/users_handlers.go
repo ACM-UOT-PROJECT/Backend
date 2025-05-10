@@ -1,9 +1,11 @@
 package server
 
 import (
+	"net/http"
 	"time"
 
 	d "backend/database"
+
 	"github.com/go-fuego/fuego"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -26,7 +28,7 @@ type UserToken struct {
 func (s *Server) IssueToken(ctx fuego.ContextNoBody) (string, error) {
 	s.logger.Info("starting...")
 	// Check for the token in cookies
-	cookieToken, err := ctx.Cookie("jwt_token")
+	cookieToken, err := ctx.Cookie("acm_jwt_token")
 	if err == nil {
 		if cookieToken != nil {
 			_, err := s.server.Security.ValidateToken(cookieToken.Value)
@@ -50,10 +52,20 @@ func (s *Server) IssueToken(ctx fuego.ContextNoBody) (string, error) {
 	}
 
 	// Generate token and store in cookie
-	token, err := s.server.Security.GenerateTokenToCookies(claims, ctx.Response())
+	token, err := s.server.Security.GenerateToken(claims)
 	if err != nil {
 		return "could not generate token", err
 	}
+
+	ctx.SetCookie(http.Cookie{
+		Name:     "acm_jwt_token",
+		Value:    token,
+		Path:     "/",
+		Secure:   false,                // Set to true if using HTTPS (recommended in production)
+		HttpOnly: true,                 // Prevents JavaScript access (for security)
+		SameSite: http.SameSiteLaxMode, // Required for cross-origin requests
+		MaxAge:   86400,                // 1 day expiration, adjust as needed
+	})
 
 	s.db.IncrementPeople()
 
